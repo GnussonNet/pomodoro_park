@@ -29,7 +29,7 @@ const ShowCounter = ({ minutes, seconds }: {
 const CountdownTimer = () => {
   const { getItem, setItem } = useAsyncStorage('@pomodoro_park_data');
   const [targetDate, setTargetDate] = useState<string>("");
-  const [minutes, seconds] = useCountdown(targetDate);
+  const [minutes, seconds, timeToCancel] = useCountdown(targetDate);
 
   const readItemFromStorage = async () => {
     const item = await getItem();
@@ -60,10 +60,21 @@ const CountdownTimer = () => {
         >
           <View className="bg-green-500 p-3 rounded-md hover:bg-slate-300 active:bg-slate-500">
             <Text className="text-center font-semibold text-gray-900">
-              Focus
+              Plant Seed
             </Text>
           </View>
         </TouchableOpacity>
+      ) : timeToCancel >= 1 ? (
+        <TouchableOpacity
+        className="mt-12"
+        onPress={() => writeItemToStorage("")}
+      >
+        <View className="bg-gray-500 p-3 rounded-md">
+          <Text className="text-center font-semibold text-gray-900">
+            Cancel ({timeToCancel})
+          </Text>
+        </View>
+      </TouchableOpacity>
       ) : (
         <TouchableOpacity
           className="mt-12"
@@ -71,7 +82,7 @@ const CountdownTimer = () => {
         >
           <View className="bg-red-500 p-3 rounded-md">
             <Text className="text-center font-semibold text-gray-900">
-              Give up
+              Abandon Plant
             </Text>
           </View>
         </TouchableOpacity>
