@@ -1,12 +1,12 @@
 import {View, Text, TouchableOpacity, ScrollView, Image} from 'react-native';
 import React from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {MainNavigation} from '../../app';
+import {WelcomeNavigation} from '../../app';
 
 const LandingPage = ({
   navigation,
 }: {
-  navigation: NativeStackNavigationProp<MainNavigation>;
+  navigation: NativeStackNavigationProp<WelcomeNavigation>;
 }) => {
   return (
     <View className="bg-white dark:bg-gray-900 h-full">
@@ -64,4 +64,3 @@ const LandingPage = ({
 };
 
 export default LandingPage;
-

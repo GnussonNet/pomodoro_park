@@ -12,7 +12,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {WelcomeNavigation} from '../../app';
 import auth from '@react-native-firebase/auth';
 
-const SignIn = ({
+const CreateAccount = ({
   navigation,
 }: {
   navigation: NativeStackNavigationProp<WelcomeNavigation>;
@@ -32,7 +32,7 @@ const SignIn = ({
         </View>
         <View className="mb-8">
           <Text className="dark:text-white text-3xl font-extrabold mb-5">
-            Sign in to account
+            Create free account
           </Text>
           <Text className="dark:text-gray-400">
             Welcome to Pomodoro Park! Let's get started on maximizing your
@@ -70,24 +70,31 @@ const SignIn = ({
           <TouchableOpacity
             onPress={() =>
               auth()
-                .signInWithEmailAndPassword(email, password)
+                .createUserWithEmailAndPassword(email, password)
                 .then(() => {
                   console.log('User account created & signed in!');
                 })
                 .catch(error => {
-                  if (
-                    error.code === 'auth/user-not-found' ||
-                    error.code === 'auth/wrong-password'
-                  ) {
+                  if (error.code === 'auth/email-already-in-use') {
                     Alert.alert(
-                      'Wrong email or password',
-                      'The user could not be found!',
+                      'Already in use',
+                      'That email address is already in use!',
                       [{text: 'OK', onPress: () => console.log('OK Pressed')}],
                     );
                   }
 
                   if (error.code === 'auth/invalid-email') {
-                    console.log('That email address is invalid!');
+                    Alert.alert(
+                      'Invalid Email',
+                      'That email address is invalid!',
+                      [{text: 'OK', onPress: () => console.log('OK Pressed')}],
+                    );
+                  }
+
+                  if (error.code === 'auth/weak-password') {
+                    Alert.alert('Week Password', 'That password is to week!', [
+                      {text: 'OK', onPress: () => console.log('OK Pressed')},
+                    ]);
                   }
 
                   console.error(error);
@@ -102,9 +109,9 @@ const SignIn = ({
         </View>
         <TouchableOpacity
           className="mt-12"
-          onPress={() => navigation.navigate('CreateAccount')}>
+          onPress={() => navigation.navigate('SignIn')}>
           <Text className="text-center text-white">
-            New member? <Text className="font-bold">Create free account</Text>
+            Already have an account? <Text className="font-bold">Sign In</Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -122,4 +129,4 @@ const SignIn = ({
   );
 };
 
-export default SignIn;
+export default CreateAccount;
