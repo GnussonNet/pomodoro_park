@@ -75,6 +75,10 @@ const CountdownTimer = () => {
   useEffect(() => {
     reference.on('value', snapshot => {
       setUserData(snapshot.val());
+      const fetchedDate = snapshot.val() as UserData;
+      if (!fetchedDate[todaysDate]) {
+        reference.child(todaysDate).set({pomodoros: 0});
+      }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
