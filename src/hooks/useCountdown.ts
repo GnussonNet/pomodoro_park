@@ -1,82 +1,85 @@
-import dayjs from 'dayjs';
-import {useEffect, useState, useRef, Dispatch, SetStateAction} from 'react';
-import useSound from 'react-native-use-sound';
+import dayjs, {Dayjs} from 'dayjs';
+import {useCallback, useEffect, useRef, useState} from 'react';
 
-interface IRemaining {
+enum TimerStatus {
+  IDLE = 'idle',
+  RUNNING = 'running',
+  CANCELLED = 'cancelled',
+  FINISHED = 'finished',
+  ABANDONED = 'abandoned',
+}
+
+interface ITimeLeft {
   minutes: number;
   seconds: number;
 }
 
-const useCountdown = (
-  targetDate: string,
-  setTargetDate: Dispatch<SetStateAction<string>>,
-  duration: number,
-) => {
-  const [remaining, setRemaining] = useState<IRemaining>({
+const useCountdown = (): [
+  ITimeLeft,
+  number,
+  string,
+  (date: Dayjs) => void,
+  () => void,
+  () => void,
+] => {
+  const [timeLeft, setTimeLeft] = useState<ITimeLeft>({
     minutes: 0,
     seconds: 0,
   });
-  const [timeToCancel, setTimeToCancel] = useState(0);
-  const countdownRef = useRef<number>();
-  const [finished, setFinished] = useState<boolean>(false);
+  const [timeToCancel, setTimeToCancel] = useState<number>(10);
+  const [status, setStatus] = useState<TimerStatus>(TimerStatus.IDLE);
+  const intervalId = useRef<number | undefined>(undefined);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [play, pause, stop, data] = useSound('pomodoro_finished.wav');
+  const start = useCallback((date: Dayjs) => {
+    setStatus(TimerStatus.RUNNING);
+    setTimeLeft({
+      minutes: dayjs(dayjs(date).diff(dayjs())).get('minutes'),
+      seconds: dayjs(dayjs(date).diff(dayjs())).get('seconds'),
+    });
+    setTimeToCancel(10);
+    let count = 0;
+    intervalId.current = setInterval(() => {
+      count++;
+      const currentTimeLeft = dayjs(date).diff(dayjs());
+      if (currentTimeLeft <= 0) {
+        setStatus(TimerStatus.FINISHED);
+        intervalId.current && clearInterval(intervalId.current);
+      } else {
+        setTimeLeft({
+          minutes: dayjs(currentTimeLeft).get('minutes'),
+          seconds: dayjs(currentTimeLeft).get('seconds'),
+        });
+        if (count <= 10) {
+          setTimeToCancel(10 - count);
+        }
+        const checkIfFinnished = currentTimeLeft - 1000;
+        if (checkIfFinnished <= 0) {
+          setStatus(TimerStatus.FINISHED);
+          intervalId.current && clearInterval(intervalId.current);
+        }
+      }
+    }, 1000);
+  }, []);
+  const cancel = useCallback(() => {
+    setStatus(TimerStatus.CANCELLED);
+    setTimeLeft({minutes: 0, seconds: 0});
+    setTimeToCancel(0);
+    intervalId.current && clearInterval(intervalId.current);
+  }, []);
+
+  const abandon = useCallback(() => {
+    setStatus(TimerStatus.ABANDONED);
+    setTimeLeft({minutes: 0, seconds: 0});
+    setTimeToCancel(0);
+    intervalId.current && clearInterval(intervalId.current);
+  }, []);
 
   useEffect(() => {
-    // This is fired when canceld or abondoned
-    if (!targetDate) {
-      countdownRef.current && clearInterval(countdownRef.current);
-      setFinished(true);
-      setTargetDate('');
-      setRemaining({minutes: 0, seconds: 0});
-      return;
-    }
-
-    // Updated every seconds using interval
-    const updateCountdown = async () => {
-      // Calculate diff in date from start to now
-      const countdown = dayjs(targetDate).diff(dayjs());
-      const cancelCountdown = dayjs(targetDate)
-        .subtract(duration, 'minutes')
-        .add(10, 'seconds')
-        .diff(dayjs());
-
-      // If countdown finnished, clear intervall
-      if (countdown < 0) {
-        if (data.isPlaying) {
-          stop();
-          play();
-        } else {
-          play();
-        }
-        countdownRef.current && clearInterval(countdownRef.current);
-        return;
-      }
-      // Do not update when finished
-      if (cancelCountdown > 0) {
-        setTimeToCancel(dayjs(cancelCountdown).get('seconds'));
-      }
-
-      // Update remaining time
-      setRemaining({
-        minutes: dayjs(countdown).get('minutes'),
-        seconds: dayjs(countdown).get('seconds'),
-      });
-    };
-
-    // Call function and start interval
-    updateCountdown();
-    countdownRef.current = setInterval(updateCountdown, 1000);
-
-    // Clear interval when unloaded
     return () => {
-      countdownRef.current && clearInterval(countdownRef.current);
+      intervalId.current && clearInterval(intervalId.current);
     };
-  }, [data.isPlaying, duration, play, setTargetDate, stop, targetDate]);
+  }, []);
 
-  // Return remaining time and cancel time
-  return {remaining, timeToCancel, finished};
+  return [timeLeft, timeToCancel, status, start, cancel, abandon];
 };
-
 export {useCountdown};

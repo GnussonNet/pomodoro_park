@@ -1,10 +1,10 @@
-import React, {useEffect, useState} from 'react';
-import {useCountdown} from '../hooks/useCountdown';
-import {Alert, Text, TouchableOpacity, View} from 'react-native';
-import dayjs from 'dayjs';
 import auth from '@react-native-firebase/auth';
 import {firebase} from '@react-native-firebase/database';
+import dayjs from 'dayjs';
+import React, {useEffect, useState} from 'react';
+import {Alert, Text, TouchableOpacity, View} from 'react-native';
 import {UserData} from '../../app';
+import {useCountdown} from '../hooks/useCountdown';
 
 const ShowCounter = ({
   minutes,
@@ -52,15 +52,8 @@ const ShowCounter = ({
 };
 
 const CountdownTimer = () => {
-  const [targetDate, setTargetDate] = useState<string>('');
   const [duration] = useState<number>(1);
   const [userData, setUserData] = useState<UserData>({});
-  const {remaining, timeToCancel} = useCountdown(
-    targetDate,
-    setTargetDate,
-    duration,
-  );
-  const {minutes, seconds} = remaining;
 
   const todaysDate = dayjs().add(0, 'day').format('YYYY-MM-DD');
 
@@ -83,22 +76,107 @@ const CountdownTimer = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [timeLeft, timeToCancel, status, start, cancel, abandon] =
+    useCountdown();
+  const {minutes, seconds} = timeLeft;
+
+  useEffect(() => {
+    if (status === 'abandoned') {
+      reference.child(todaysDate).set({pomodoros: 0});
+    }
+    if (status === 'finished') {
+      reference
+        .child(todaysDate)
+        .set({pomodoros: userData[todaysDate].pomodoros + 1});
+    }
+  }, [reference, status, todaysDate, userData]);
+
   return (
     userData[todaysDate] && (
       <View>
-        {minutes + seconds <= 0 ? (
+        {status === 'running' && timeToCancel <= 0 ? (
           <>
             <ShowCounter
-              minutes={duration}
+              minutes={minutes}
               seconds={seconds}
               pomodoros={userData[todaysDate].pomodoros}
             />
             <TouchableOpacity
               className="mt-4"
               onPress={() =>
-                setTargetDate(
-                  dayjs().add(duration, 'minutes').add(1, 'second').toString(),
+                Alert.alert(
+                  'Abandon Plant',
+                  'Are you sure you want to abandon your plant?',
+                  [
+                    {
+                      text: 'Close',
+                      onPress: () => console.log('Cancel Pressed'),
+                      style: 'cancel',
+                    },
+                    {
+                      text: 'Abondon Plant',
+                      onPress: () => abandon(),
+                      style: 'destructive',
+                    },
+                  ],
                 )
+              }>
+              <View className="border-2 border-gray-600 p-2 w-40 mx-auto rounded-md">
+                <Text className="text-center font-semibold text-gray-600">
+                  Abandon Plant
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </>
+        ) : status === 'running' && timeToCancel >= 1 ? (
+          <>
+            <ShowCounter
+              minutes={minutes}
+              seconds={seconds}
+              pomodoros={userData[todaysDate].pomodoros}
+            />
+            <TouchableOpacity className="mt-4" onPress={() => cancel()}>
+              <View className="border-2 border-gray-600 p-2 w-40 mx-auto rounded-md">
+                <Text className="text-center font-semibold text-gray-600">
+                  Cancel ({timeToCancel})
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <ShowCounter
+              minutes={duration}
+              seconds={0}
+              pomodoros={userData[todaysDate].pomodoros}
+            />
+            <TouchableOpacity
+              className="mt-4"
+              onPress={() =>
+                start(dayjs().add(duration, 'minutes').add(1, 'second'))
+              }>
+              <View className="bg-green-500 border-2 border-green-500 p-2 w-40 mx-auto rounded-md">
+                <Text className="text-center font-semibold text-gray-900">
+                  Plant Seed
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </>
+        )}
+        {/* {status === 'finished' ||
+        status === 'idle' ||
+        status === 'cancelled' ||
+        status === 'abandoned' ? (
+          <>
+            <ShowCounter
+              minutes={duration}
+              seconds={0}
+              pomodoros={userData[todaysDate].pomodoros}
+            />
+            <TouchableOpacity
+              className="mt-4"
+              onPress={() =>
+                start(dayjs().add(duration, 'minutes').add(1, 'second'))
               }>
               <View className="bg-green-500 border-2 border-green-500 p-2 w-40 mx-auto rounded-md">
                 <Text className="text-center font-semibold text-gray-900">
@@ -114,9 +192,7 @@ const CountdownTimer = () => {
               seconds={seconds}
               pomodoros={userData[todaysDate].pomodoros}
             />
-            <TouchableOpacity
-              className="mt-4"
-              onPress={() => setTargetDate('')}>
+            <TouchableOpacity className="mt-4" onPress={() => cancel()}>
               <View className="border-2 border-gray-600 p-2 w-40 mx-auto rounded-md">
                 <Text className="text-center font-semibold text-gray-600">
                   Cancel ({timeToCancel})
@@ -145,7 +221,7 @@ const CountdownTimer = () => {
                     },
                     {
                       text: 'Abondon Plant',
-                      onPress: () => setTargetDate(''),
+                      onPress: () => abandon(),
                       style: 'destructive',
                     },
                   ],
@@ -158,7 +234,7 @@ const CountdownTimer = () => {
               </View>
             </TouchableOpacity>
           </>
-        )}
+        )} */}
       </View>
     )
   );
