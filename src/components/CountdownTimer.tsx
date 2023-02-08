@@ -52,7 +52,7 @@ const ShowCounter = ({
 };
 
 const CountdownTimer = () => {
-  const [duration] = useState<number>(1);
+  const [duration] = useState<number>(25);
   const [userData, setUserData] = useState<UserData>({});
 
   const todaysDate = dayjs().add(0, 'day').format('YYYY-MM-DD');
@@ -163,78 +163,6 @@ const CountdownTimer = () => {
             </TouchableOpacity>
           </>
         )}
-        {/* {status === 'finished' ||
-        status === 'idle' ||
-        status === 'cancelled' ||
-        status === 'abandoned' ? (
-          <>
-            <ShowCounter
-              minutes={duration}
-              seconds={0}
-              pomodoros={userData[todaysDate].pomodoros}
-            />
-            <TouchableOpacity
-              className="mt-4"
-              onPress={() =>
-                start(dayjs().add(duration, 'minutes').add(1, 'second'))
-              }>
-              <View className="bg-green-500 border-2 border-green-500 p-2 w-40 mx-auto rounded-md">
-                <Text className="text-center font-semibold text-gray-900">
-                  Plant Seed
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </>
-        ) : timeToCancel >= 1 ? (
-          <>
-            <ShowCounter
-              minutes={minutes}
-              seconds={seconds}
-              pomodoros={userData[todaysDate].pomodoros}
-            />
-            <TouchableOpacity className="mt-4" onPress={() => cancel()}>
-              <View className="border-2 border-gray-600 p-2 w-40 mx-auto rounded-md">
-                <Text className="text-center font-semibold text-gray-600">
-                  Cancel ({timeToCancel})
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            <ShowCounter
-              minutes={minutes}
-              seconds={seconds}
-              pomodoros={userData[todaysDate].pomodoros}
-            />
-            <TouchableOpacity
-              className="mt-4"
-              onPress={() =>
-                Alert.alert(
-                  'Abandon Plant',
-                  'Are you sure you want to abandon your plant?',
-                  [
-                    {
-                      text: 'Close',
-                      onPress: () => console.log('Cancel Pressed'),
-                      style: 'cancel',
-                    },
-                    {
-                      text: 'Abondon Plant',
-                      onPress: () => abandon(),
-                      style: 'destructive',
-                    },
-                  ],
-                )
-              }>
-              <View className="border-2 border-gray-600 p-2 w-40 mx-auto rounded-md">
-                <Text className="text-center font-semibold text-gray-600">
-                  Abandon Plant
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </>
-        )} */}
       </View>
     )
   );
