@@ -3,6 +3,7 @@ import {firebase} from '@react-native-firebase/database';
 import dayjs from 'dayjs';
 import React, {useEffect, useState} from 'react';
 import {Alert, Text, TouchableOpacity, View} from 'react-native';
+import useSound from 'react-native-use-sound';
 import {UserData} from '../../app';
 import {useCountdown} from '../hooks/useCountdown';
 
@@ -76,6 +77,8 @@ const CountdownTimer = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [play, pause, stop, data] = useSound('pomodoro_finished.wav');
   const [startCountdown, startBreak, cancel, abandon, countdownData] =
     useCountdown();
   const {timeToCancel, status, timeLeft} = countdownData;
@@ -84,6 +87,14 @@ const CountdownTimer = () => {
   useEffect(() => {
     if (status === 'abandoned') {
       reference.child(todaysDate).set({pomodoros: 0});
+    }
+    if (status === 'finished' || status === 'break_finished') {
+      if (data.isPlaying) {
+        stop();
+        play();
+      } else {
+        play();
+      }
     }
     if (status === 'finished') {
       reference
