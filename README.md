@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://gnusson.net"><img src="https://github.com/GnussonNet/pomodoro_park/blob/main/.github/logo.png" alt="Markdownify" width="200"></a>
+  <a href="https://gnusson.net"><img src="https://github.com/GnussonNet/pomodoro_park/blob/main/.github/logo.png" alt="Markdownify" width="150"></a>
   <br>
   Pomodoro Park
   <br>
