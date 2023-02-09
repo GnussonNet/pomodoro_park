@@ -76,8 +76,9 @@ const CountdownTimer = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [timeLeft, timeToCancel, status, start, cancel, abandon] =
+  const [startCountdown, startBreak, cancel, abandon, countdownData] =
     useCountdown();
+  const {timeToCancel, status, timeLeft} = countdownData;
   const {minutes, seconds} = timeLeft;
 
   useEffect(() => {
@@ -89,12 +90,14 @@ const CountdownTimer = () => {
         .child(todaysDate)
         .set({pomodoros: userData[todaysDate].pomodoros + 1});
     }
-  }, [reference, status, todaysDate, userData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   return (
     userData[todaysDate] && (
       <View>
-        {status === 'running' && timeToCancel <= 0 ? (
+        {(status === 'running' && timeToCancel <= 0) ||
+        (status === 'break_running' && timeToCancel <= 0) ? (
           <>
             <ShowCounter
               minutes={minutes}
@@ -128,7 +131,8 @@ const CountdownTimer = () => {
               </View>
             </TouchableOpacity>
           </>
-        ) : status === 'running' && timeToCancel >= 1 ? (
+        ) : (status === 'running' && timeToCancel >= 1) ||
+          (status === 'break_running' && timeToCancel >= 1) ? (
           <>
             <ShowCounter
               minutes={minutes}
@@ -143,6 +147,32 @@ const CountdownTimer = () => {
               </View>
             </TouchableOpacity>
           </>
+        ) : status === 'finished' || status === 'break_cancelled' ? (
+          <>
+            <ShowCounter
+              minutes={userData[todaysDate].pomodoros % 4 === 0 ? 25 : 5}
+              seconds={0}
+              pomodoros={userData[todaysDate].pomodoros}
+            />
+            <TouchableOpacity
+              className="mt-4"
+              onPress={() =>
+                startBreak(
+                  dayjs()
+                    .add(
+                      userData[todaysDate].pomodoros % 4 === 0 ? 25 : 5,
+                      'minutes',
+                    )
+                    .add(1, 'second'),
+                )
+              }>
+              <View className="bg-green-500 border-2 border-green-500 p-2 w-40 mx-auto rounded-md">
+                <Text className="text-center font-semibold text-gray-900">
+                  Start Break
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </>
         ) : (
           <>
             <ShowCounter
@@ -153,7 +183,9 @@ const CountdownTimer = () => {
             <TouchableOpacity
               className="mt-4"
               onPress={() =>
-                start(dayjs().add(duration, 'minutes').add(1, 'second'))
+                startCountdown(
+                  dayjs().add(duration, 'minutes').add(1, 'second'),
+                )
               }>
               <View className="bg-green-500 border-2 border-green-500 p-2 w-40 mx-auto rounded-md">
                 <Text className="text-center font-semibold text-gray-900">
