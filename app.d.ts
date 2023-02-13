@@ -10,4 +10,5 @@ export type UserData = {
   [date: string]: {
     pomodoros: number;
   };
+  startedAt: string;
 };

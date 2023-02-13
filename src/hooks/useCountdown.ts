@@ -25,7 +25,7 @@ interface ICountdownData {
 }
 
 const useCountdown = (): [
-  (date: Dayjs) => void,
+  (date: Dayjs, cancellable?: boolean) => void,
   (date: Dayjs) => void,
   () => void,
   () => void,
@@ -39,13 +39,18 @@ const useCountdown = (): [
   const [status, setStatus] = useState<TimerStatus>(TimerStatus.IDLE);
   const intervalId = useRef<number | undefined>(undefined);
 
-  const startCountdown = useCallback((date: Dayjs) => {
+  const startCountdown = useCallback((date: Dayjs, cancellable?: boolean) => {
+    cancellable = cancellable ?? true;
     setStatus(TimerStatus.RUNNING);
     setTimeLeft({
       minutes: dayjs(dayjs(date).diff(dayjs())).get('minutes'),
       seconds: dayjs(dayjs(date).diff(dayjs())).get('seconds'),
     });
-    setTimeToCancel(10);
+    if (cancellable) {
+      setTimeToCancel(10);
+    } else {
+      setTimeToCancel(0);
+    }
     let count = 0;
     intervalId.current = setInterval(() => {
       count++;
@@ -58,7 +63,7 @@ const useCountdown = (): [
           minutes: dayjs(currentTimeLeft).get('minutes'),
           seconds: dayjs(currentTimeLeft).get('seconds'),
         });
-        if (count <= 10) {
+        if (count <= 10 && cancellable) {
           setTimeToCancel(10 - count);
         }
         const checkIfFinnished = currentTimeLeft - 1000;
