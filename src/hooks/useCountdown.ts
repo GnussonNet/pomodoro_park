@@ -40,21 +40,22 @@ const useCountdown = (): [
   const intervalId = useRef<number | undefined>(undefined);
 
   const startCountdown = useCallback((date: Dayjs, cancellable?: boolean) => {
+    const currentDate = dayjs().add(10500, 'milliseconds');
     cancellable = cancellable ?? true;
+    date = dayjs(date).add(500, 'milliseconds');
     setStatus(TimerStatus.RUNNING);
     setTimeLeft({
       minutes: dayjs(dayjs(date).diff(dayjs())).get('minutes'),
       seconds: dayjs(dayjs(date).diff(dayjs())).get('seconds'),
     });
     if (cancellable) {
-      setTimeToCancel(9);
+      setTimeToCancel(10);
     } else {
       setTimeToCancel(0);
     }
-    let count = 0;
     intervalId.current = setInterval(() => {
-      count++;
       const currentTimeLeft = dayjs(date).diff(dayjs());
+      const currentCancelTimeLeft = dayjs(currentDate).diff(dayjs());
       if (currentTimeLeft <= 0) {
         setStatus(TimerStatus.FINISHED);
         intervalId.current && clearInterval(intervalId.current);
@@ -63,8 +64,8 @@ const useCountdown = (): [
           minutes: dayjs(currentTimeLeft).get('minutes'),
           seconds: dayjs(currentTimeLeft).get('seconds'),
         });
-        if (count <= 9 && cancellable) {
-          setTimeToCancel(9 - count);
+        if (currentCancelTimeLeft >= 0) {
+          setTimeToCancel(dayjs(currentCancelTimeLeft).get('seconds'));
         }
         const checkIfFinnished = currentTimeLeft - 1000;
         if (checkIfFinnished <= 0) {
@@ -72,19 +73,20 @@ const useCountdown = (): [
           intervalId.current && clearInterval(intervalId.current);
         }
       }
-    }, 1000);
+    }, 500);
   }, []);
   const startBreak = useCallback((date: Dayjs) => {
+    const currentDate = dayjs().add(10500, 'milliseconds');
+    date = dayjs(date).add(500, 'milliseconds');
     setStatus(TimerStatus.BREAK_RUNNING);
     setTimeLeft({
       minutes: dayjs(dayjs(date).diff(dayjs())).get('minutes'),
       seconds: dayjs(dayjs(date).diff(dayjs())).get('seconds'),
     });
     setTimeToCancel(10);
-    let count = 0;
     intervalId.current = setInterval(() => {
-      count++;
       const currentTimeLeft = dayjs(date).diff(dayjs());
+      const currentCancelTimeLeft = dayjs(currentDate).diff(dayjs());
       if (currentTimeLeft <= 0) {
         setStatus(TimerStatus.BREAK_FINISHED);
         intervalId.current && clearInterval(intervalId.current);
@@ -93,8 +95,8 @@ const useCountdown = (): [
           minutes: dayjs(currentTimeLeft).get('minutes'),
           seconds: dayjs(currentTimeLeft).get('seconds'),
         });
-        if (count <= 10) {
-          setTimeToCancel(10 - count);
+        if (currentCancelTimeLeft >= 0) {
+          setTimeToCancel(dayjs(currentCancelTimeLeft).get('seconds'));
         }
         const checkIfFinnished = currentTimeLeft - 1000;
         if (checkIfFinnished <= 0) {
@@ -102,7 +104,7 @@ const useCountdown = (): [
           intervalId.current && clearInterval(intervalId.current);
         }
       }
-    }, 1000);
+    }, 500);
   }, []);
 
   const cancel = useCallback(() => {
