@@ -2,7 +2,7 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:pomodoro_park.xcodeproj">
+      location = "group:/Users/gnusson/Documents/github/pomodoro_park/ios/PomodoroPark.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:Pods/Pods.xcodeproj">
