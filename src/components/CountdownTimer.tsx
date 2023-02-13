@@ -12,7 +12,7 @@ const CountdownTimer = () => {
   const [duration] = useState<number>(25);
   const [userData, setUserData] = useState<UserData>();
 
-  const todaysDate = dayjs().add(0, 'day').format('YYYY-MM-DD');
+  const todaysDate = dayjs().format('YYYY-MM-DD');
 
   const user = auth().currentUser;
   const reference = firebase
@@ -68,7 +68,7 @@ const CountdownTimer = () => {
   }, [status]);
 
   const startCountdownTimer = () => {
-    const startTime = dayjs().add(0, 'minutes').add(21, 'second');
+    const startTime = dayjs().add(25, 'minutes');
     reference.child('startedAt').set(startTime.toString());
     startCountdown(startTime);
   };
@@ -151,12 +151,10 @@ const CountdownTimer = () => {
               className="mt-4"
               onPress={() =>
                 startBreak(
-                  dayjs()
-                    .add(
-                      userData[todaysDate].pomodoros % 4 === 0 ? 25 : 5,
-                      'minutes',
-                    )
-                    .add(1, 'second'),
+                  dayjs().add(
+                    userData[todaysDate].pomodoros % 4 === 0 ? 25 : 5,
+                    'minutes',
+                  ),
                 )
               }>
               <View className="bg-green-500 border-2 border-green-500 p-2 w-40 mx-auto rounded-md">

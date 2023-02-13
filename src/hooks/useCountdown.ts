@@ -47,7 +47,7 @@ const useCountdown = (): [
       seconds: dayjs(dayjs(date).diff(dayjs())).get('seconds'),
     });
     if (cancellable) {
-      setTimeToCancel(10);
+      setTimeToCancel(9);
     } else {
       setTimeToCancel(0);
     }
@@ -63,8 +63,8 @@ const useCountdown = (): [
           minutes: dayjs(currentTimeLeft).get('minutes'),
           seconds: dayjs(currentTimeLeft).get('seconds'),
         });
-        if (count <= 10 && cancellable) {
-          setTimeToCancel(10 - count);
+        if (count <= 9 && cancellable) {
+          setTimeToCancel(9 - count);
         }
         const checkIfFinnished = currentTimeLeft - 1000;
         if (checkIfFinnished <= 0) {
