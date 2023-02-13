@@ -64,7 +64,7 @@ const useCountdown = (): [
           minutes: dayjs(currentTimeLeft).get('minutes'),
           seconds: dayjs(currentTimeLeft).get('seconds'),
         });
-        if (currentCancelTimeLeft >= 0) {
+        if (currentCancelTimeLeft >= 0 && cancellable) {
           setTimeToCancel(dayjs(currentCancelTimeLeft).get('seconds'));
         }
         const checkIfFinnished = currentTimeLeft - 1000;
