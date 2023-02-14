@@ -2,35 +2,54 @@ import auth from '@react-native-firebase/auth';
 import {firebase} from '@react-native-firebase/database';
 import dayjs from 'dayjs';
 import React, {useEffect, useState} from 'react';
-import {Alert, Text, TouchableOpacity, View} from 'react-native';
+import {Alert, View} from 'react-native';
 import useSound from 'react-native-use-sound';
 import {UserData} from '../../app';
 import {useCountdown} from '../hooks/useCountdown';
-import ShowCounter from './ShowCounter';
+import Countdown from './Countdown';
+
+// Default values
+const DURATION = 25;
 
 const CountdownTimer = () => {
-  const [duration] = useState<number>(25);
+  //
+  // States
+  //
   const [userData, setUserData] = useState<UserData>();
 
-  const todaysDate = dayjs().format('YYYY-MM-DD');
+  //
+  // Hooks
+  //
+  const [startCountdown, startBreak, cancel, abandon, countdownData] =
+    useCountdown();
+  const {timeToCancel, status, timeLeft} = countdownData;
+  const {minutes, seconds} = timeLeft;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [play, pause, stop, data] = useSound('pomodoro_finished.wav');
 
-  const user = auth().currentUser;
-  const reference = firebase
+  //
+  // Constats
+  //
+  const todaysDate = dayjs().format('YYYY-MM-DD');
+  const database = firebase
     .app()
     .database(
       'https://pomodoro-park-default-rtdb.europe-west1.firebasedatabase.app',
     )
-    .ref(`/users/${user?.uid}`);
+    .ref(`/users/${auth().currentUser?.uid}`);
 
+  //
+  // App loads
+  //
   useEffect(() => {
-    reference.on('value', snapshot => {
+    database.on('value', snapshot => {
       setUserData(snapshot.val());
       const fetchedDate = snapshot.val() as UserData;
       if (!fetchedDate[todaysDate]) {
-        reference.child(todaysDate).set({pomodoros: 0});
+        database.child(todaysDate).set({pomodoros: 0});
       }
     });
-    reference.once('value', snapshot => {
+    database.once('value', snapshot => {
       const fetchedStartTime = snapshot.val() as UserData;
       if (fetchedStartTime.startedAt) {
         startCountdown(dayjs(fetchedStartTime.startedAt), false);
@@ -39,16 +58,12 @@ const CountdownTimer = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [play, pause, stop, data] = useSound('pomodoro_finished.wav');
-  const [startCountdown, startBreak, cancel, abandon, countdownData] =
-    useCountdown();
-  const {timeToCancel, status, timeLeft} = countdownData;
-  const {minutes, seconds} = timeLeft;
-
+  //
+  // Status changed
+  //
   useEffect(() => {
     if (status === 'abandoned') {
-      reference.child(todaysDate).set({pomodoros: 0});
+      database.child(todaysDate).set({pomodoros: 0});
     }
     if (status === 'finished' || status === 'break_finished') {
       if (data.isPlaying) {
@@ -59,131 +74,103 @@ const CountdownTimer = () => {
       }
     }
     if (status === 'finished') {
-      reference
+      database
         .child(todaysDate)
         .set({pomodoros: userData && userData[todaysDate].pomodoros + 1});
-      reference.child('startedAt').set(null);
+      database.child('startedAt').set(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
+  //
+  // Functions
+  //
   const startCountdownTimer = () => {
     const startTime = dayjs().add(25, 'minutes');
-    reference.child('startedAt').set(startTime.toString());
+    database.child('startedAt').set(startTime.toString());
     startCountdown(startTime);
   };
 
   const cancelCountdownTimer = () => {
-    reference.child('startedAt').set(null);
+    database.child('startedAt').set(null);
     cancel();
   };
 
   const abandonCountdownTimer = () => {
-    reference.child('startedAt').set(null);
+    database.child('startedAt').set(null);
     abandon();
   };
 
-  return (
-    userData &&
+  return userData ? (
     userData[todaysDate] && (
       <View>
         {(status === 'running' && timeToCancel <= 0) ||
         (status === 'break_running' && timeToCancel <= 0) ? (
-          <>
-            <ShowCounter
-              minutes={minutes}
-              seconds={seconds}
-              pomodoros={userData[todaysDate].pomodoros}
-            />
-            <TouchableOpacity
-              className="mt-4"
-              onPress={() =>
-                Alert.alert(
-                  'Abandon Plant',
-                  'Are you sure you want to abandon your plant?',
-                  [
-                    {
-                      text: 'Close',
-                      onPress: () => console.log('Cancel Pressed'),
-                      style: 'cancel',
-                    },
-                    {
-                      text: 'Abondon Plant',
-                      onPress: () => abandonCountdownTimer(),
-                      style: 'destructive',
-                    },
-                  ],
-                )
-              }>
-              <View className="border-2 border-gray-600 p-2 w-40 mx-auto rounded-md">
-                <Text className="text-center font-semibold text-gray-600">
-                  Abandon Plant
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </>
+          <Countdown
+            title="Abandon Plant"
+            type="secondary"
+            minutes={minutes}
+            seconds={seconds}
+            pomodoros={userData[todaysDate].pomodoros}
+            action={() =>
+              Alert.alert(
+                'Abandon Plant',
+                'Are you sure you want to abandon your plant?',
+                [
+                  {
+                    text: 'Close',
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'cancel',
+                  },
+                  {
+                    text: 'Abondon Plant',
+                    onPress: () => abandonCountdownTimer(),
+                    style: 'destructive',
+                  },
+                ],
+              )
+            }
+          />
         ) : (status === 'running' && timeToCancel >= 1) ||
           (status === 'break_running' && timeToCancel >= 1) ? (
-          <>
-            <ShowCounter
-              minutes={minutes}
-              seconds={seconds}
-              pomodoros={userData[todaysDate].pomodoros}
-            />
-            <TouchableOpacity
-              className="mt-4"
-              onPress={() => cancelCountdownTimer()}>
-              <View className="border-2 border-gray-600 p-2 w-40 mx-auto rounded-md">
-                <Text className="text-center font-semibold text-gray-600">
-                  Cancel ({timeToCancel})
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </>
+          <Countdown
+            title={`Cancel (${timeToCancel})`}
+            type="secondary"
+            minutes={minutes}
+            seconds={seconds}
+            pomodoros={userData[todaysDate].pomodoros}
+            action={() => cancelCountdownTimer()}
+          />
         ) : status === 'finished' || status === 'break_cancelled' ? (
-          <>
-            <ShowCounter
-              minutes={userData[todaysDate].pomodoros % 4 === 0 ? 25 : 5}
-              seconds={0}
-              pomodoros={userData[todaysDate].pomodoros}
-            />
-            <TouchableOpacity
-              className="mt-4"
-              onPress={() =>
-                startBreak(
-                  dayjs().add(
-                    userData[todaysDate].pomodoros % 4 === 0 ? 25 : 5,
-                    'minutes',
-                  ),
-                )
-              }>
-              <View className="bg-green-500 border-2 border-green-500 p-2 w-40 mx-auto rounded-md">
-                <Text className="text-center font-semibold text-gray-900">
-                  Start Break
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </>
+          <Countdown
+            title="Start Break"
+            type="primary"
+            minutes={userData[todaysDate].pomodoros % 4 === 0 ? 25 : 5}
+            seconds={0}
+            pomodoros={userData[todaysDate].pomodoros}
+            action={() =>
+              startBreak(
+                dayjs().add(
+                  userData[todaysDate].pomodoros % 4 === 0 ? 25 : 5,
+                  'minutes',
+                ),
+              )
+            }
+          />
         ) : (
-          <>
-            <ShowCounter
-              minutes={duration}
-              seconds={0}
-              pomodoros={userData[todaysDate].pomodoros}
-            />
-            <TouchableOpacity
-              className="mt-4"
-              onPress={() => startCountdownTimer()}>
-              <View className="bg-green-500 border-2 border-green-500 p-2 w-40 mx-auto rounded-md">
-                <Text className="text-center font-semibold text-gray-900">
-                  Plant Seed
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </>
+          <Countdown
+            title="Plant Seed"
+            type="primary"
+            minutes={DURATION}
+            seconds={0}
+            pomodoros={userData[todaysDate].pomodoros}
+            action={startCountdownTimer}
+          />
         )}
       </View>
     )
+  ) : (
+    <></>
   );
 };
 
