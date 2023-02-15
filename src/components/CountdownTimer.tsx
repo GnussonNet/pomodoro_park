@@ -7,6 +7,7 @@ import useSound from 'react-native-use-sound';
 import {UserData} from '../../app';
 import {useCountdown} from '../hooks/useCountdown';
 import Countdown from './Countdown';
+import Trees from './Trees';
 
 // Default values
 const DURATION = 25;
@@ -104,6 +105,7 @@ const CountdownTimer = () => {
   return userData ? (
     userData[todaysDate] && (
       <View>
+        <Trees pomodoros={userData[todaysDate].pomodoros} />
         {(status === 'running' && timeToCancel <= 0) ||
         (status === 'break_running' && timeToCancel <= 0) ? (
           <Countdown
